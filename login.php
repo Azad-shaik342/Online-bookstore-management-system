@@ -1,0 +1,7 @@
+<?php
+require __DIR__.'/../includes/bootstrap.php';if(is_logged_in())redirect();$error='';
+if($_SERVER['REQUEST_METHOD']==='POST'){verify_csrf();$email=strtolower(post_string('email',150));$pw=(string)($_POST['password']??'');$st=$conn->prepare("SELECT id,name,email,password_hash,role,status FROM users WHERE email=? LIMIT 1");$st->bind_param('s',$email);$st->execute();$u=$st->get_result()->fetch_assoc();
+if($u && $u['status']==='active' && password_verify($pw,$u['password_hash'])){login_user($u);$up=$conn->prepare("UPDATE users SET last_login_at=NOW() WHERE id=?");$up->bind_param('i',$u['id']);$up->execute();redirect(is_admin()?'admin/index.php':'');}else{$error='Email or password is incorrect.';}}
+$pageTitle='Sign in';require __DIR__.'/../includes/header.php';?>
+<section class="auth-wrap"><form method="post" class="auth-card"><?=csrf_field()?><p class="eyebrow">WELCOME BACK</p><h1>Sign in</h1><p>Your next chapter is waiting.</p><?php if($error):?><div class="alert error"><?=e($error)?></div><?php endif;?><label>Email address<input type="email" name="email" required autocomplete="email"></label><label>Password<input type="password" name="password" required autocomplete="current-password"></label><button class="btn btn-dark full">Sign in ↗</button><p class="auth-foot">New here? <a href="<?=e(url('auth/register.php'))?>">Create an account</a></p></form></section>
+<?php require __DIR__.'/../includes/footer.php';?>
